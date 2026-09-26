@@ -1,0 +1,43 @@
+name: Build Saeed Medical Lab LIS Windows Installer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+
+      - name: Build Windows application
+        shell: pwsh
+        run: |
+          python -m PyInstaller --onefile --windowed --name "Saeed Medical Lab LIS" source/saeed_lab_lis.py
+          if (!(Test-Path "dist\Saeed Medical Lab LIS.exe")) { throw "EXE was not created." }
+
+      - name: Install NSIS
+        uses: negrutiu/nsis-install@v2
+        with:
+          distro: official
+
+      - name: Build Setup.exe
+        shell: pwsh
+        run: |
+          makensis installer.nsi
+          if (!(Test-Path "Saeed_Medical_Lab_LIS_Setup.exe")) { throw "Installer was not created." }
+
+      - name: Upload Setup.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Saeed-Medical-Lab-LIS-Setup
+          path: Saeed_Medical_Lab_LIS_Setup.exe
+          if-no-files-found: error
